@@ -2,7 +2,7 @@ package matcher
 
 type PathMatch struct {
 	Handler PathHandler
-	Vars    PathVars
+	Params  PathParams
 }
 
 // PathRegistry is a facade to path/matcher package
@@ -40,5 +40,11 @@ func (r *PathRegistry) Get(pathStr string) *PathMatch {
 		return nil
 	}
 
-	return &PathMatch{Handler: path.Handler, Vars: path.GetValuesFrom(parts)}
+	var params PathParams = nil
+
+	if path.HasParameters() {
+		params = path.GetValuesFrom(parts)
+	}
+
+	return &PathMatch{Handler: path.Handler, Params: params}
 }

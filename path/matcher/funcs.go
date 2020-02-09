@@ -23,13 +23,18 @@ func SplitURLPath(path string) []string {
 	return filtered
 }
 
-// IsSegmentVar checks if segment string a variable declaration
-func IsSegmentVar(name string) bool {
+// HasParamSegments checks if path contains parameter segments
+func HasParamSegments(path string) bool {
+	return strings.Contains(path, "/:")
+}
+
+// IsSegmentParam checks if segment string a variable declaration
+func IsSegmentParam(name string) bool {
 	return name[:1] == ":"
 }
 
 func getSegmentIdentifier(name string) string {
-	if IsSegmentVar(name) {
+	if IsSegmentParam(name) {
 		return ":"
 	}
 
@@ -38,7 +43,7 @@ func getSegmentIdentifier(name string) string {
 
 /*
 	Rules for matching:
-	If exact match for name found it is being taken, no variables, even if it is not going to resolve
+	If exact match for name found it is being taken, no parameters, even if it is not going to resolve
 	For example, if these paths registered
 	/path1/path2
 	/path1/:var1/something/else

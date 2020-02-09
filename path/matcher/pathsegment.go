@@ -33,7 +33,7 @@ func (p *PathSegment) IsEndpoint() bool {
 
 // IsVariable checks if PathSegment name is a variable
 func (p *PathSegment) IsVariable() bool {
-	return IsSegmentVar(p.Name)
+	return IsSegmentParam(p.Name)
 }
 
 // IsVariable checks if PathSegment name is a variable

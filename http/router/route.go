@@ -63,6 +63,11 @@ func (r *Route) Delete(handler matcher.PathHandler) (*Route, error) {
 	return r.AddMethod("DELETE", handler)
 }
 
+// Delete adds handler for DELETE HTTP method
+func (r *Route) Options(handler matcher.PathHandler) (*Route, error) {
+	return r.AddMethod("OPTIONS", handler)
+}
+
 // AddMethod adds handler for specified HTTP method
 func (r *Route) AddMethod(method string, handler matcher.PathHandler) (*Route, error) {
 	if r.methods == nil {
@@ -84,12 +89,12 @@ func (r *Route) HasMethod(method string) bool {
 }
 
 // Call calls handler depending on HTTP method from http.Request.Method or handler for unknown method
-func (r *Route) Call(writer http.ResponseWriter, request *http.Request, vars matcher.PathVars) {
+func (r *Route) Call(writer http.ResponseWriter, request *http.Request, params matcher.PathParams) {
 	switch {
 	case r.methods[request.Method] != nil:
-		r.methods[request.Method](writer, request, vars)
+		r.methods[request.Method](writer, request, params)
 	case r.undefined != nil:
-		r.undefined(writer, request, vars)
+		r.undefined(writer, request, params)
 	default:
 		undefinedMethod(writer, request)
 	}
@@ -102,7 +107,7 @@ func (r *Route) SetUndefined(handler matcher.PathHandler) {
 
 // GetHandler return HTTP response handler that will pick handlers from a route depending on HTTP method
 func (r *Route) GetHandler() matcher.PathHandler {
-	return func(writer http.ResponseWriter, request *http.Request, vars matcher.PathVars) {
-		r.Call(writer, request, vars)
+	return func(writer http.ResponseWriter, request *http.Request, params matcher.PathParams) {
+		r.Call(writer, request, params)
 	}
 }

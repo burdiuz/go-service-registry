@@ -24,6 +24,12 @@ func New(undefined matcher.PathHandler) *Router {
 	return &router
 }
 
+/*
+  TODO Add ParamsRoute struct which will work with ParamsPath,
+  Router checks if path contains /: and uses Params*, if not -- uses normal Route and Path.
+
+*/
+
 // Route Add route handler
 func (r *Router) Route(path string, getHandler matcher.PathHandler) *Route {
 	route := RouteNew(getHandler, r.undefined)
@@ -44,7 +50,7 @@ func (r *Router) GetHandler() func(writer http.ResponseWriter, request *http.Req
 
 		switch {
 		case match != nil:
-			match.Handler(writer, request, match.Vars)
+			match.Handler(writer, request, match.Params)
 		case r.undefined != nil:
 			r.undefined(writer, request, nil)
 		case match != nil:
