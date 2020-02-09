@@ -1,4 +1,4 @@
-package main
+package tests
 
 import (
 	"fmt"
@@ -56,6 +56,17 @@ func main2() {
 
 func main() {
 	router := httprouter.New(nil)
+
+	router.Route("/registry/register/:name/:version/:port", func(w http.ResponseWriter, r *http.Request, params matcher.PathParams) {
+
+	})
+	router.Route("/registry/find/:name/:version", func(w http.ResponseWriter, r *http.Request, params matcher.PathParams) {
+
+	})
+	router.Route("/registry/unregister/:name/:version", func(w http.ResponseWriter, r *http.Request, params matcher.PathParams) {
+
+	})
+
 	router.Route("/apple", nil).AddCustom("GET", func(w http.ResponseWriter) {
 		message := "Apple was called."
 
