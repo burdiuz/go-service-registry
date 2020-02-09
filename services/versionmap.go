@@ -3,7 +3,7 @@ package services
 import (
 	"fmt"
 
-	semver "golang.org/x/tools/internal/semver"
+	semver "golang.org/x/mod/semver"
 )
 
 // TODO make it an array of services?
