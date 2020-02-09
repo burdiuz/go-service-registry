@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	matcher "../../path/matcher"
+	utils "../../utils"
 )
 
 func undefinedMethod(w http.ResponseWriter, r *http.Request) {
@@ -23,8 +24,16 @@ type Route struct {
 	undefined matcher.PathHandler
 }
 
-func RouteNew(get matcher.PathHandler, undefined matcher.PathHandler) *Route {
-	route := Route{undefined: undefined}
+/*RouteNew creates new Route and accepts two parameters
+- get is a function to handle GET requests
+- undefined is a function to handle requests to mthods that were left with no handlers
+*/
+func RouteNew(get interface{}, undefined interface{}) *Route {
+	route := Route{}
+
+	if undefined != nil {
+		route.undefined = utils.HandleCustom(undefined)
+	}
 
 	if get != nil {
 		route.Get(get)
@@ -34,38 +43,38 @@ func RouteNew(get matcher.PathHandler, undefined matcher.PathHandler) *Route {
 }
 
 // Get adds handler for GET HTTP method
-func (r *Route) Get(handler matcher.PathHandler) (*Route, error) {
-	return r.AddMethod("GET", handler)
+func (r *Route) Get(handler interface{}) (*Route, error) {
+	return r.AddCustom("GET", handler)
 }
 
 // Head adds handler for HEAD HTTP method
-func (r *Route) Head(handler matcher.PathHandler) (*Route, error) {
-	return r.AddMethod("HEAD", handler)
+func (r *Route) Head(handler interface{}) (*Route, error) {
+	return r.AddCustom("HEAD", handler)
 }
 
 // Post adds handler for POST HTTP method
-func (r *Route) Post(handler matcher.PathHandler) (*Route, error) {
-	return r.AddMethod("POST", handler)
+func (r *Route) Post(handler interface{}) (*Route, error) {
+	return r.AddCustom("POST", handler)
 }
 
 // Put adds handler for PUT HTTP method
-func (r *Route) Put(handler matcher.PathHandler) (*Route, error) {
-	return r.AddMethod("PUT", handler)
+func (r *Route) Put(handler interface{}) (*Route, error) {
+	return r.AddCustom("PUT", handler)
 }
 
 // Patch adds handler for PATCH HTTP method
-func (r *Route) Patch(handler matcher.PathHandler) (*Route, error) {
-	return r.AddMethod("PATCH", handler)
+func (r *Route) Patch(handler interface{}) (*Route, error) {
+	return r.AddCustom("PATCH", handler)
 }
 
 // Delete adds handler for DELETE HTTP method
-func (r *Route) Delete(handler matcher.PathHandler) (*Route, error) {
-	return r.AddMethod("DELETE", handler)
+func (r *Route) Delete(handler interface{}) (*Route, error) {
+	return r.AddCustom("DELETE", handler)
 }
 
 // Delete adds handler for DELETE HTTP method
-func (r *Route) Options(handler matcher.PathHandler) (*Route, error) {
-	return r.AddMethod("OPTIONS", handler)
+func (r *Route) Options(handler interface{}) (*Route, error) {
+	return r.AddCustom("OPTIONS", handler)
 }
 
 // AddMethod adds handler for specified HTTP method
@@ -81,6 +90,19 @@ func (r *Route) AddMethod(method string, handler matcher.PathHandler) (*Route, e
 	r.methods[method] = handler
 
 	return r, nil
+}
+
+/*AddCustom allows to use functions of custom signature for routing, these signatures supported
+func()
+func(writer http.ResponseWriter)
+func(writer http.ResponseWriter, request *http.Request)
+func(writer http.ResponseWriter, request *http.Request, params matcher.PathParams)
+Could be useful to reuse handlers that were applied to http.HandleFunc() or for paths
+with no parameters just ignore receiving PathParams.
+*/
+func (r *Route) AddCustom(method string, handler interface{}) (*Route, error) {
+	custom := utils.HandleCustom(handler)
+	return r.AddMethod(method, custom)
 }
 
 // HasMethod checks if HTTP method has handler registered

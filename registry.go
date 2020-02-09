@@ -56,7 +56,7 @@ func main2() {
 
 func main() {
 	router := httprouter.New(nil)
-	router.Route("/apple", nil).Get(func(w http.ResponseWriter, r *http.Request, v matcher.PathParams) {
+	router.Route("/apple", nil).AddCustom("GET", func(w http.ResponseWriter) {
 		message := "Apple was called."
 
 		w.Write([]byte(message))
