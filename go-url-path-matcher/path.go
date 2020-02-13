@@ -2,8 +2,11 @@ package matcher
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
+
+	utils "./utils"
 )
 
 // PathParams is an alias of a map that contains values of path parameters
@@ -21,7 +24,7 @@ func splitPath(path string) ([]string, error) {
 		return nil, errors.New("Path cannot contain empty segments")
 	}
 
-	return SplitURLPath(path), nil
+	return utils.SplitURLPath(path), nil
 }
 
 // Path structure that represents a endpoint with path and string
@@ -31,8 +34,8 @@ type Path struct {
 	Handler    PathHandler
 }
 
-// PathNew creates new Path struct instance
-func PathNew(path string, handler PathHandler) (*Path, error) {
+// NewPath creates new Path struct instance
+func NewPath(path string, handler PathHandler) (*Path, error) {
 	if handler == nil {
 		return nil, errors.New("Path must have a valid handler")
 	}
@@ -44,13 +47,21 @@ func PathNew(path string, handler PathHandler) (*Path, error) {
 	}
 
 	var parameters map[int]string = nil
+	names := make(map[string]bool)
 
 	if HasParamSegments(path) {
 		parameters = make(map[int]string)
 
 		for index, part := range parts {
 			if IsSegmentParam(part) {
-				parameters[index] = part[1:]
+				name := part[1:]
+
+				if names[name] {
+					return nil, fmt.Errorf("Path parameter %q used twice in %q", name, path)
+				}
+
+				names[name] = true
+				parameters[index] = name
 			}
 		}
 	}
@@ -85,7 +96,7 @@ func (p *Path) GetValuesFrom(path []string) PathParams {
 
 // GetValuesFromString returns a map with variable name from path and its value from passed path
 func (p *Path) GetValuesFromString(path string) map[string]string {
-	return p.GetValuesFrom(SplitURLPath(path))
+	return p.GetValuesFrom(utils.SplitURLPath(path))
 }
 
 func (p *Path) String() string {

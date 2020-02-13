@@ -1,11 +1,12 @@
 package router
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
-	matcher "../../path/matcher"
-	utils "../../utils"
+	matcher "../go-url-path-matcher"
+	utils "./utils"
 )
 
 func undefinedMethod(w http.ResponseWriter, r *http.Request) {
@@ -24,11 +25,11 @@ type Route struct {
 	undefined matcher.PathHandler
 }
 
-/*RouteNew creates new Route and accepts two parameters
+/*NewRoute creates new Route and accepts two parameters
 - get is a function to handle GET requests
-- undefined is a function to handle requests to mthods that were left with no handlers
+- undefined is a function to handle requests to methods that were left with no handlers
 */
-func RouteNew(get interface{}, undefined interface{}) *Route {
+func NewRoute(get interface{}, undefined interface{}) *Route {
 	route := Route{}
 
 	if undefined != nil {
@@ -42,54 +43,23 @@ func RouteNew(get interface{}, undefined interface{}) *Route {
 	return &route
 }
 
-// Get adds handler for GET HTTP method
-func (r *Route) Get(handler interface{}) (*Route, error) {
-	return r.AddCustom("GET", handler)
-}
-
-// Head adds handler for HEAD HTTP method
-func (r *Route) Head(handler interface{}) (*Route, error) {
-	return r.AddCustom("HEAD", handler)
-}
-
-// Post adds handler for POST HTTP method
-func (r *Route) Post(handler interface{}) (*Route, error) {
-	return r.AddCustom("POST", handler)
-}
-
-// Put adds handler for PUT HTTP method
-func (r *Route) Put(handler interface{}) (*Route, error) {
-	return r.AddCustom("PUT", handler)
-}
-
-// Patch adds handler for PATCH HTTP method
-func (r *Route) Patch(handler interface{}) (*Route, error) {
-	return r.AddCustom("PATCH", handler)
-}
-
-// Delete adds handler for DELETE HTTP method
-func (r *Route) Delete(handler interface{}) (*Route, error) {
-	return r.AddCustom("DELETE", handler)
-}
-
-// Delete adds handler for DELETE HTTP method
-func (r *Route) Options(handler interface{}) (*Route, error) {
-	return r.AddCustom("OPTIONS", handler)
-}
-
 // AddMethod adds handler for specified HTTP method
-func (r *Route) AddMethod(method string, handler matcher.PathHandler) (*Route, error) {
+func (r *Route) AddMethod(method string, handler matcher.PathHandler) error {
+	if method == "" || handler == nil {
+		return errors.New("Method and Handler are required parameters.")
+	}
+
 	if r.methods == nil {
 		r.methods = make(map[string]matcher.PathHandler)
 	}
 
 	if r.methods[method] != nil {
-		return nil, fmt.Errorf("Handler for method %q is already registered", method)
+		return fmt.Errorf("Handler for method %q is already registered", method)
 	}
 
 	r.methods[method] = handler
 
-	return r, nil
+	return nil
 }
 
 /*AddCustom allows to use functions of custom signature for routing, these signatures supported
@@ -100,9 +70,52 @@ func(writer http.ResponseWriter, request *http.Request, params matcher.PathParam
 Could be useful to reuse handlers that were applied to http.HandleFunc() or for paths
 with no parameters just ignore receiving PathParams.
 */
-func (r *Route) AddCustom(method string, handler interface{}) (*Route, error) {
+func (r *Route) AddCustom(method string, handler interface{}) error {
 	custom := utils.HandleCustom(handler)
 	return r.AddMethod(method, custom)
+}
+
+func (r *Route) addOrPanic(method string, handler interface{}) *Route {
+	err := r.AddCustom(method, handler)
+
+	if err != nil {
+		panic(err)
+	}
+
+	return r
+} // Get adds handler for GET HTTP method
+func (r *Route) Get(handler interface{}) *Route {
+	return r.addOrPanic("GET", handler)
+}
+
+// Head adds handler for HEAD HTTP method
+func (r *Route) Head(handler interface{}) *Route {
+	return r.addOrPanic("HEAD", handler)
+}
+
+// Post adds handler for POST HTTP method
+func (r *Route) Post(handler interface{}) *Route {
+	return r.addOrPanic("POST", handler)
+}
+
+// Put adds handler for PUT HTTP method
+func (r *Route) Put(handler interface{}) *Route {
+	return r.addOrPanic("PUT", handler)
+}
+
+// Patch adds handler for PATCH HTTP method
+func (r *Route) Patch(handler interface{}) *Route {
+	return r.addOrPanic("PATCH", handler)
+}
+
+// Delete adds handler for DELETE HTTP method
+func (r *Route) Delete(handler interface{}) *Route {
+	return r.addOrPanic("DELETE", handler)
+}
+
+// Delete adds handler for DELETE HTTP method
+func (r *Route) Options(handler interface{}) *Route {
+	return r.addOrPanic("OPTIONS", handler)
 }
 
 // HasMethod checks if HTTP method has handler registered

@@ -1,0 +1,31 @@
+package pointerreplace
+
+import (
+	"fmt"
+	"time"
+)
+
+type Value struct {
+	createdAt int64
+	value     string
+}
+
+func New(val string) *Value {
+	return &Value{time.Now().Unix(), val}
+}
+
+func (v *Value) ReplaceMe() {
+	*v = *New("replaced")
+}
+
+func main() {
+	myv := New("some string")
+
+	fmt.Printf("Struct: %v\n", *myv)
+
+	time.Sleep(time.Second)
+
+	myv.ReplaceMe()
+
+	fmt.Printf("Struct: %v\n", *myv)
+}

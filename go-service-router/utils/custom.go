@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"reflect"
 
-	matcher "../path/matcher"
+	matcher "../../go-url-path-matcher"
 )
 
 /*HandleCustom allows using functions with these signatures:
@@ -37,9 +37,18 @@ func HandleCustom(customHandler interface{}) matcher.PathHandler {
 			fn(res, req)
 		}
 	case 3:
-		fn := customHandler.(func(res http.ResponseWriter, req *http.Request, params matcher.PathParams))
-		return func(res http.ResponseWriter, req *http.Request, params matcher.PathParams) {
-			fn(res, req, params)
+		if fnType.Name() == "PathHandler" {
+			fn := customHandler.(matcher.PathHandler)
+
+			return func(res http.ResponseWriter, req *http.Request, params matcher.PathParams) {
+				fn(res, req, params)
+			}
+		} else {
+			fn := customHandler.(func(res http.ResponseWriter, req *http.Request, params matcher.PathParams))
+
+			return func(res http.ResponseWriter, req *http.Request, params matcher.PathParams) {
+				fn(res, req, params)
+			}
 		}
 	default:
 		panic("Custom handler got an unexpected count of input parameters.")

@@ -3,7 +3,7 @@ package utils
 import (
 	"net/http"
 
-	matcher "../path/matcher"
+	matcher "../../go-url-path-matcher"
 )
 
 // HandleStatic maps request path to directory content and returns file content if found

@@ -1,0 +1,34 @@
+package jsontest
+
+import (
+	"encoding/json"
+	"fmt"
+)
+
+type Struct struct {
+	Name    string `json:"name"`
+	Version string `json:"version"`
+}
+
+func main() {
+	in := []*Struct{
+		&Struct{"srv1", "1.0.0"},
+		&Struct{"srv2", "2.0.0"},
+	}
+
+	out, err := json.Marshal(in)
+
+	if err != nil {
+		panic(err)
+	}
+
+	var out2 []*Struct
+
+	err = json.Unmarshal(out, &out2)
+
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Printf("%v\n\n%v\n\n%v", in, string(out), *out2[0])
+}

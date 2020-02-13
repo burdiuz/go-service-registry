@@ -37,24 +37,38 @@ func (snm ServiceNameMap) HasExact(name, version string) bool {
 	return versions.HasExact(version)
 }
 
-func (snm ServiceNameMap) Find(name, version string) []*Service {
+func (snm ServiceNameMap) Filter(name string, filter func(s *Service) bool) {
+	versions := snm.Versions(name)
+
+	if versions != nil {
+		versions.Filter(filter)
+	}
+}
+
+func (snm ServiceNameMap) FilterAll(filter func(s *Service) bool) {
+	for _, versions := range snm {
+		versions.Filter(filter)
+	}
+}
+
+func (snm ServiceNameMap) Find(name, version string, filter func(s *Service) bool) ServiceList {
 	versions := snm.Versions(name)
 
 	if versions == nil {
-		return []*Service{}
+		return ServiceList{}
 	}
 
-	return versions.Find(version)
+	return versions.Find(version, filter)
 }
 
-func (snm ServiceNameMap) Get(name, version string) *Service {
+func (snm ServiceNameMap) Get(name, version string, filter func(s *Service) bool) *Service {
 	versions := snm.Versions(name)
 
 	if versions == nil {
 		return nil
 	}
 
-	return versions.Get(version)
+	return versions.Get(version, filter)
 }
 
 func (snm ServiceNameMap) GetExact(name, version string) *Service {

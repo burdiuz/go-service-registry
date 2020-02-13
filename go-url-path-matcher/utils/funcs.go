@@ -1,4 +1,4 @@
-package matcher
+package utils
 
 import (
 	"strings"

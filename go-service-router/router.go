@@ -1,15 +1,11 @@
 package router
 
 import (
+	"fmt"
 	"net/http"
 
-	matcher "../../path/matcher"
+	matcher "../go-url-path-matcher"
 )
-
-func undefinedPath(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(404)
-	w.Write([]byte("Not Found"))
-}
 
 // Router object contains paths and handler functions for endpoints
 type Router struct {
@@ -18,8 +14,8 @@ type Router struct {
 }
 
 // New creates new router instance with its own paths mapping
-func New(undefined matcher.PathHandler) *Router {
-	router := Router{paths: matcher.PathRegistryNew(), undefined: undefined}
+func New(notFound matcher.PathHandler) *Router {
+	router := Router{paths: matcher.NewPathRegistry(), undefined: notFound}
 
 	return &router
 }
@@ -32,13 +28,9 @@ func New(undefined matcher.PathHandler) *Router {
 
 // Route Add route handler
 func (r *Router) Route(path string, getHandler matcher.PathHandler) *Route {
-	route := RouteNew(getHandler, r.undefined)
+	route := NewRoute(getHandler, r.undefined)
 
 	r.paths.Add(path, route.GetHandler())
-
-	if getHandler != nil {
-		route.Get(getHandler)
-	}
 
 	return route
 }
@@ -48,13 +40,15 @@ func (r *Router) GetHandler() func(writer http.ResponseWriter, request *http.Req
 	return func(writer http.ResponseWriter, request *http.Request) {
 		match := r.paths.Get(request.URL.Path)
 
+		fmt.Printf("%v, %v\n", request.URL.Path, match)
+
 		switch {
 		case match != nil:
 			match.Handler(writer, request, match.Params)
 		case r.undefined != nil:
 			r.undefined(writer, request, nil)
 		case match != nil:
-			undefinedPath(writer, request)
+			http.NotFound(writer, request)
 		}
 	}
 }

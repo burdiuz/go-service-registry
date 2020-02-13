@@ -1,6 +1,10 @@
 package matcher
 
-import "fmt"
+import (
+	"fmt"
+
+	utils "./utils"
+)
 
 // PathSegment represents a node in registered paths tree that is being matched against other paths to find endpint which will handle request
 type PathSegment struct {
@@ -9,16 +13,16 @@ type PathSegment struct {
 	Path     *Path
 }
 
-// PathSegmentNew creates a new PathSegment
-func PathSegmentNew(name string, path *Path) *PathSegment {
+// NewPathSegment creates a new PathSegment
+func NewPathSegment(name string, path *Path) *PathSegment {
 	root := PathSegment{Name: name, Path: path}
 
 	return &root
 }
 
-// PathSegmentNewRoot creates new PathSegment with empty name that can be used as root for PathSegment tree
-func PathSegmentNewRoot() *PathSegment {
-	return PathSegmentNew("", nil)
+// NewPathSegmentRoot creates new PathSegment with empty name that can be used as root for PathSegment tree
+func NewPathSegmentRoot() *PathSegment {
+	return NewPathSegment("", nil)
 }
 
 // IsLeaf checks if PathSegment is the last in tree branch and does not have Children
@@ -54,7 +58,7 @@ func (p *PathSegment) Insert(path *Path, index int) error {
 	var node *PathSegment = p.Children[key]
 
 	if node == nil {
-		node = PathSegmentNew(name, nil)
+		node = NewPathSegment(name, nil)
 		p.Children[key] = node
 	}
 
@@ -77,12 +81,12 @@ func (p *PathSegment) Match(path []string) *Path {
 		return nil
 	}
 
-	return matchFrom(path, 0, p)
+	return utils.matchFrom(path, 0, p)
 }
 
 // MatchString matches a path against PathSegment tree to find an endpoint that fits it
 func (p *PathSegment) MatchString(path string) *Path {
-	parts := SplitURLPath(path)
+	parts := utils.SplitURLPath(path)
 
 	return p.Match(parts)
 }

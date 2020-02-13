@@ -6,10 +6,10 @@ import (
 	semver "golang.org/x/mod/semver"
 )
 
-// TODO make it an array of services?
+// TODO make it a map of arrays of services?
 type ServiceVersionMap map[string]*Service
 
-func (svm ServiceVersionMap) Add(s *Service) {
+func (svm ServiceVersionMap) Add(s *Service) error {
 	if svm[s.Version] != nil {
 		return fmt.Errorf("Service %q version %q is already registered", s.Name, s.Version)
 	}
@@ -19,7 +19,7 @@ func (svm ServiceVersionMap) Add(s *Service) {
 }
 
 func (svm ServiceVersionMap) Has(version string) bool {
-	for sver, _ := range svm {
+	for sver := range svm {
 		if semver.Compare(sver, version) == 0 {
 			return true
 		}
@@ -32,21 +32,29 @@ func (svm ServiceVersionMap) HasExact(version string) bool {
 	return svm[version] != nil
 }
 
-func (svm ServiceVersionMap) Find(version string) []*Service {
-	list := make([]*Service, 0)
+func (svm ServiceVersionMap) Filter(filter func(s *Service) bool) {
+	for sver, s := range svm {
+		if !filter(s) {
+			delete(svm, sver)
+		}
+	}
+}
+
+func (svm ServiceVersionMap) Find(version string, filter func(s *Service) bool) ServiceList {
+	list := make(ServiceList, 0)
 
 	for sver, s := range svm {
-		if semver.Compare(sver, version) == 0 {
-			append(list, s)
+		if semver.Compare(sver, version) == 0 && (filter == nil || filter(s)) {
+			list = append(list, s)
 		}
 	}
 
 	return list
 }
 
-func (svm ServiceVersionMap) Get(version string) *Service {
+func (svm ServiceVersionMap) Get(version string, filter func(s *Service) bool) *Service {
 	for sver, s := range svm {
-		if semver.Compare(sver, version) == 0 {
+		if semver.Compare(sver, version) == 0 && (filter == nil || filter(s)) {
 			return s
 		}
 	}
